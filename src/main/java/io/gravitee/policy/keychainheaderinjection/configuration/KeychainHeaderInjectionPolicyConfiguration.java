@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.policy.apikey.configuration;
+package io.gravitee.policy.keychainheaderinjection.configuration;
 
 import io.gravitee.policy.api.PolicyConfiguration;
 
@@ -21,15 +21,5 @@ import io.gravitee.policy.api.PolicyConfiguration;
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class ApiKeyPolicyConfiguration implements PolicyConfiguration {
-
-    private boolean propagateApiKey = false;
-
-    public boolean isPropagateApiKey() {
-        return propagateApiKey;
-    }
-
-    public void setPropagateApiKey(boolean propagateApiKey) {
-        this.propagateApiKey = propagateApiKey;
-    }
+public class KeychainHeaderInjectionPolicyConfiguration implements PolicyConfiguration {
 }
