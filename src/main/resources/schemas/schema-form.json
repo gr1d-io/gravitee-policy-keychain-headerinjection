@@ -1,6 +1,6 @@
 {
   "type" : "object",
-  "id" : "urn:jsonschema:io:gravitee:policy:apikey:configuration:ApiKeyPolicyConfiguration",
+  "id" : "urn:jsonschema:io:gravitee:policy:keychain:configuration:KeychainHeaderInjectionPolicyConfiguration",
   "properties" : {
     "propagateApiKey" : {
       "title": "Propagate API Key to upstream API",
