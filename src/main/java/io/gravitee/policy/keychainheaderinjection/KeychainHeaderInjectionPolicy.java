@@ -27,6 +27,7 @@ import io.gravitee.policy.keychainheaderinjection.configuration.KeychainHeaderIn
 import io.gravitee.repository.exceptions.TechnicalException;
 import io.gravitee.repository.management.api.ApiKeyRepository;
 import io.gravitee.repository.management.model.ApiKey;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -67,6 +68,8 @@ public class KeychainHeaderInjectionPolicy {
     public void onRequest(Request request, Response response, ExecutionContext executionContext, PolicyChain policyChain) {
         String requestKeychain = lookForKeychain(executionContext, request);
 
+        KeychainHeaderInjectionPolicy.LOGGER.warn(requestKeychain);
+
         if (requestKeychain == null || requestKeychain.isEmpty()) {
             policyChain.failWith(PolicyResult.failure(
                     HttpStatusCode.FORBIDDEN_403,
@@ -76,12 +79,24 @@ public class KeychainHeaderInjectionPolicy {
 
         try
         {
-            JSONObject apiData = new JSONObject(requestKeychain);
+            JSONArray apiList = new JSONArray(requestKeychain);
+            JSONObject apiData=null;
+            for(int i=0;i<apiList.length();i++)
+            {
+                JSONObject elem = apiList.getJSONObject(i);
+                if(elem.getString(METHOD_STRING).equals(BASICAUTH))
+                    apiData = elem;
+            }
+            if(apiData==null) {
+                policyChain.failWith(PolicyResult.failure(HttpStatusCode.NOT_IMPLEMENTED_501, "Method not supported yet. "));
+                return;
+            }
             String user = apiData.getString(USER_STRING);
             String pass = apiData.getString(PASS_STRING);
             String userPass = String.format("%s:%s", user, pass);
             String encodedHeader = java.util.Base64.getEncoder().encodeToString(userPass.getBytes());
             request.headers().add("Authorization", String.format("Basic %s", encodedHeader));
+            //request.headers().remove("")
         }
         catch (JSONException e)
         {
