@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.jar.JarException;
 
@@ -48,13 +49,8 @@ public class KeychainHeaderInjectionPolicy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeychainHeaderInjectionPolicy.class);
 
-    static final String ATTR_AUTHORIZATION_KEY = "Authorization";
     static final String KEYCHAIN_STRING = "keychain";
-    static final String USER_STRING = "user";
-    static final String PASS_STRING = "pass";
-    static final String METHOD_STRING = "method";
-    static final String BASICAUTH = "basicauth";
-
+    
     /**
      * Policy configuration
      */
@@ -80,23 +76,15 @@ public class KeychainHeaderInjectionPolicy {
         try
         {
             JSONArray apiList = new JSONArray(requestKeychain);
-            JSONObject apiData=null;
-            for(int i=0;i<apiList.length();i++)
+            KeychainInterpreter interpreter = new KeychainInterpreter(apiList);
+            for (Map.Entry<String,String> header : interpreter.getHeaders().entrySet())
             {
-                JSONObject elem = apiList.getJSONObject(i);
-                if(elem.getString(METHOD_STRING).equals(BASICAUTH))
-                    apiData = elem;
+                while (request.headers().getFirst(header.getKey()) != null)
+                {
+                    request.headers().remove(header.getKey());
+                }
+                request.headers().add(header.getKey(), header.getValue());
             }
-            if(apiData==null) {
-                policyChain.failWith(PolicyResult.failure(HttpStatusCode.NOT_IMPLEMENTED_501, "Method not supported yet. "));
-                return;
-            }
-            String user = apiData.getString(USER_STRING);
-            String pass = apiData.getString(PASS_STRING);
-            String userPass = String.format("%s:%s", user, pass);
-            String encodedHeader = java.util.Base64.getEncoder().encodeToString(userPass.getBytes());
-            request.headers().add("Authorization", String.format("Basic %s", encodedHeader));
-            //request.headers().remove("")
         }
         catch (JSONException e)
         {
@@ -114,11 +102,6 @@ public class KeychainHeaderInjectionPolicy {
 
         if(attrib!=null)
             keychainResponse = (String)attrib;
-
-        // clean auth request
-        String authorization = request.headers().getFirst(ATTR_AUTHORIZATION_KEY);
-        if(authorization != null)
-            request.headers().remove(ATTR_AUTHORIZATION_KEY);
 
         return keychainResponse;
     }
