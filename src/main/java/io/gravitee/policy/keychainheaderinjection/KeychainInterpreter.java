@@ -16,6 +16,7 @@
 package io.gravitee.policy.keychainheaderinjection;
 import java.util.HashMap;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.json.JSONArray;
@@ -33,13 +34,9 @@ public class KeychainInterpreter
     private static final String BASICAUTH_METHOD = "basicauth";
     private static final String BASICAUTH_USER_KEY = "user";
     private static final String BASICAUTH_PASSWORD_KEY = "pass";
-    private static final String BODY_METHOD = "body";
-    private static final String BODY_KEY = "body";
     private static final String HEADER_METHOD = "header";
     private static final String HEADER_KEY_KEY = "headerkey";
     private static final String HEADER_VALUE_KEY = "headervalue";
-    private static final String QUERY_METHOD = "query";
-    private static final String QUERY_KEY = "query";
 
     private final JSONArray apiList;
     private HashMap<String, String> headers = new HashMap<String, String>();
@@ -70,12 +67,6 @@ public class KeychainInterpreter
                 case KeychainInterpreter.HEADER_METHOD:
                     this.addHeader(apiData);
                     break;
-                case KeychainInterpreter.BODY_METHOD:
-                    this.addBody(apiData);
-                    break;
-                case KeychainInterpreter.QUERY_METHOD:
-                    this.addQuery(apiData);
-                    break;
                 default:
                     break;
             }
@@ -91,7 +82,7 @@ public class KeychainInterpreter
 
         this.headers.put("Authorization", String.format("Basic %s", encodedHeader));
 
-        KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] ADD BASIC AUTH: %s:%s", user, pass));
+        KeychainInterpreter.LOGGER.info(String.format("[Keychain->Header] ADD BASIC AUTH: %s:%s", user, pass));
 
     }
 
@@ -101,35 +92,6 @@ public class KeychainInterpreter
         String value = apiData.getString(KeychainInterpreter.HEADER_VALUE_KEY);
 
         this.headers.put(key, value);
-        KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] ADD HEADER: %s:%s", key, value));
-    }
-
-    private void addBody(JSONObject apiData)
-    {
-        this.body = apiData.getString(KeychainInterpreter.BODY_KEY);
-        KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] ADD BODY: %s", this.getBody()));
-    }
-
-    private void addQuery(JSONObject apiData)
-    {
-        this.query = apiData.getString(KeychainInterpreter.QUERY_KEY);
-        KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] ADD QUERY: %s", this.getQuery()));
-    }
-
-    public String applyQuery(String url)
-    {
-        if ((this.getQuery() != null) && (this.getQuery().length() > 0))
-        {
-            if (url.indexOf("?") > -1)
-            {
-                url += String.format("&%s", this.getQuery());
-            }
-            else
-            {
-                url += String.format("?%s", this.getQuery());
-            }
-            KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] APPLY QUERY: %s", url));
-        }
-        return url;
+        KeychainInterpreter.LOGGER.info(String.format("[Keychain->Header] ADD HEADER: %s:%s", key, value));
     }
 }
