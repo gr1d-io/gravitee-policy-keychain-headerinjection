@@ -30,13 +30,12 @@ public class KeychainInterpreter
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeychainHeaderInjectionPolicy.class);
 
-    private static final String METHOD_KEY = "method";
+    private static final String METHOD_KEY = "_Gr1d_method";
     private static final String BASICAUTH_METHOD = "basicauth";
     private static final String BASICAUTH_USER_KEY = "user";
     private static final String BASICAUTH_PASSWORD_KEY = "pass";
     private static final String HEADER_METHOD = "header";
-    private static final String HEADER_KEY_KEY = "headerkey";
-    private static final String HEADER_VALUE_KEY = "headervalue";
+    private static final String[] RESERVED_KEYS = {"_Gr1d_appId", "_Gr1d_apiId", "_Gr1d_gw", "_Gr1d_method", "_Gr1d_hash"};
 
     private final JSONArray apiList;
     private HashMap<String, String> headers = new HashMap<String, String>();
@@ -88,10 +87,21 @@ public class KeychainInterpreter
 
     private void addHeader(JSONObject apiData)
     {
-        String key = apiData.getString(KeychainInterpreter.HEADER_KEY_KEY);
-        String value = apiData.getString(KeychainInterpreter.HEADER_VALUE_KEY);
+        for(String key : apiData.keySet()) 
+        {
+            if (!KeychainInterpreter.isReservedKey(key)) 
+            {
+                this.headers.put(key, apiData.getString(key));
+            }
+        }
+        KeychainInterpreter.LOGGER.info(String.format("[Keychain->AccessToken] ADD HEADERS."));
+    }
 
-        this.headers.put(key, value);
-        KeychainInterpreter.LOGGER.info(String.format("[Keychain->Header] ADD HEADER: %s:%s", key, value));
+    private static Boolean isReservedKey(String key) {
+        Boolean isReserved = false;
+        for (String reservedKey : KeychainInterpreter.RESERVED_KEYS) {
+            isReserved |= key.equals(reservedKey);
+        }
+        return isReserved;
     }
 }
